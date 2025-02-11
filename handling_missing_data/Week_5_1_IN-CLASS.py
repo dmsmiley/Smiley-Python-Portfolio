@@ -30,6 +30,7 @@ df = pd.read_csv("titanic.csv")
 # ------------------------------------------------------------------------------
 # Show key statistical measures like mean, standard deviation, etc.
 st.write("**Summary Statistics**")
+st.write(df.shape)
 st.dataframe(df.describe())
 
 # ------------------------------------------------------------------------------
@@ -37,12 +38,16 @@ st.dataframe(df.describe())
 # ------------------------------------------------------------------------------
 # Display the count of missing values for each column.
 st.write("**Number of Missing Values by Column**")
+st.dataframe(df.isnull().sum())
 
 # ------------------------------------------------------------------------------
 # Visualize Missing Data
 # ------------------------------------------------------------------------------
 # Create a heatmap to visually indicate where missing values occur.
-
+st.subheader("Heatmap of Missing Values")
+fig, ax = plt.subplots() # adding a blank canvas
+sns.heatmap(df.isnull(), cmap = "viridis", cbar = False) # drawing the viz
+st.pyplot(fig) # revealing our viz
 
 # ================================================================================
 # Interactive Missing Data Handling
