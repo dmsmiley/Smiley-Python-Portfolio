@@ -3,6 +3,7 @@ import numpy as np  # For numerical operations
 import streamlit as st  # For creating the interactive app
 import seaborn as sns  # For easy dataset loading and visualizations
 import matplotlib.pyplot as plt  # For plotting
+from scipy.stats import iqr # For getting the iqr
 
 # ------------------------------------------------------------------------------
 # Lecture: Data Validation, Outliers, Inconsistencies & Errors in Data
@@ -19,34 +20,41 @@ This lecture covers:
 # Load a different dataset: the 'tips' dataset from seaborn
 # ------------------------------------------------------------------------------
 df = sns.load_dataset("tips")
+# Appending a negative tip
+df.loc[-1] = [-25, -5, "Male", "Yes", "Jan", "Midnight", 30]
 
 st.header("1. Data Validation")
 st.subheader("Data Overview")
 st.write("First few rows of the dataset:")
+st.code("df.head()")
 st.dataframe(df.head())
 
 st.subheader("Data Types & Missing Values")
 st.write("Data Types:")
+st.code("df.dtypes")
 st.write(df.dtypes)
 st.write("Missing Values per Column:")
+st.code("df.isnull().sum()")
 st.write(df.isnull().sum())
 
 # ------------------------------------------------------------------------------
 # Detecting Outliers in a Numerical Column ('total_bill')
 # ------------------------------------------------------------------------------
 st.header("2. Detecting Outliers")
-st.subheader("Boxplot for 'total_bill'")
+st.subheader("Boxplot for Selected Column")
 
 # Create a boxplot for 'total_bill'
 fig1, ax1 = plt.subplots()
-sns.boxplot(x=df["total_bill"], ax=ax1)
-ax1.set_title("Boxplot of Total Bill")
+column = st.selectbox("Select a Column:", df.columns.unique())
+sns.boxplot(x=df[column])
+ax1.set_title(f"Boxplot of {column}")
 st.pyplot(fig1)
 
 # Calculate IQR for 'total_bill' to identify outliers
-Q1 = df["total_bill"].quantile(0.25)
-Q3 = df["total_bill"].quantile(0.75)
-IQR = Q3 - Q1
+# Compute Q1 and Q3 using numpy
+Q1, Q3 = np.percentile(df[column].dropna(), [25, 75])
+IQR = iqr(df[column].dropna())
+
 lower_bound = Q1 - 1.5 * IQR
 upper_bound = Q3 + 1.5 * IQR
 
@@ -54,8 +62,8 @@ st.write(f"Lower Bound: {lower_bound:.2f}")
 st.write(f"Upper Bound: {upper_bound:.2f}")
 
 # Identify outliers in 'total_bill'
-outliers = df[(df["total_bill"] < lower_bound) | (df["total_bill"] > upper_bound)]
-st.write("Rows with outliers in 'total_bill':")
+outliers = df[(df[column] < lower_bound) | (df[column] > upper_bound)]
+st.write(f"Rows with outliers in '{column}':")
 st.dataframe(outliers)
 
 # ------------------------------------------------------------------------------
@@ -67,17 +75,14 @@ st.subheader("Duplicate Records")
 # Check for duplicate rows in the dataset
 duplicate_count = df.duplicated().sum()
 st.write(f"Number of duplicate rows: {duplicate_count}")
+st.dataframe(df[df.duplicated() == 1])
 
 # For demonstration, let's simulate an inconsistency:
 # Assume that a negative tip value is an error.
 st.subheader("Checking for Unexpected Values in 'tip'")
-# Simulate an error by injecting a negative tip value into a copy of the dataset
-df_error = df.copy()
-if not df_error.empty:
-    df_error.loc[df_error.index[0], "tip"] = -5  # Introduce a negative tip value
 
 # Check for negative tip values
-negative_tips = df_error[df_error["tip"] < 0]
+negative_tips = df[df["tip"] < 0]
 if negative_tips.empty:
     st.write("No negative tip values found.")
 else:
