@@ -1,8 +1,4 @@
 import streamlit as st
-from transformers import pipeline
-
-# Optional: Load models once
-transformer = pipeline("sentiment-analysis")
 
 # Sentiment functions
 def rule_based_sentiment(text):
@@ -13,22 +9,9 @@ def rule_based_sentiment(text):
     score = sum([lexicon.get(word, 0) for word in text.lower().split()])
     return "positive" if score > 0 else "negative"
 
-def transformer_sentiment(text):
-    result = transformer(text)[0]["label"]
-    return "positive" if result == "POSITIVE" else "negative"
-
 # Streamlit interface
 st.title("🎯 Sentiment Analyzer")
 text = st.text_area("Enter your review:")
 
-method = st.selectbox("Choose Sentiment Method", ["Rule-Based", "Transformer"])
-
-if st.button("Analyze"):
-    if method == "Rule-Based":
-        result = rule_based_sentiment(text)
-    elif method == "Transformer":
-        result = transformer_sentiment(text)
-    else:
-        print("This button is broken!")
-
-    st.write(f"🧠 Sentiment: **{result.upper()}**")
+result = rule_based_sentiment(text)
+st.write(f"🧠 Sentiment: **{result.upper()}**")
